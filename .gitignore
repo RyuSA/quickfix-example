@@ -38,3 +38,6 @@ out/
 
 ### Gradle Properties ###
 gradle.properties
+
+### log ###
+log
