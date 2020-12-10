@@ -2,8 +2,6 @@ package com.github.ryusa.vulture.adventcalendar2020.quickfix.acceptor;
 
 import java.util.UUID;
 
-import org.springframework.stereotype.Component;
-
 import lombok.extern.log4j.Log4j2;
 import quickfix.DoNotSend;
 import quickfix.FieldNotFound;
@@ -20,7 +18,6 @@ import quickfix.field.OrdStatus;
 import quickfix.fix44.component.Instrument;
 
 @Log4j2
-@Component
 public class AcceptorApplication extends quickfix.MessageCracker implements quickfix.Application {
 
     @Override
@@ -71,10 +68,10 @@ public class AcceptorApplication extends quickfix.MessageCracker implements quic
      * @param order     {@link quickfix.fix44.NewOrderSingle}
      * @param sessionID {@link quickfix.SessionID}
      */
-    public void onMessage(quickfix.fix44.NewOrderSingle order, SessionID sessionID) {
+    @quickfix.MessageCracker.Handler
+    public void onNewOrderSingle(quickfix.fix44.NewOrderSingle order, SessionID sessionID) {
         log.info("Congratulations! I recieve a new order!!");
         log.info("Order Detail; {}", order.toRawString());
-        // DO Something
         replyNewOrderSingle(order, sessionID);
     }
 
