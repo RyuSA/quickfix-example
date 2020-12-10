@@ -18,43 +18,43 @@ import quickfix.ThreadedSocketAcceptor;
 @Configuration
 public class AcceptorConfig {
 
-    @Bean
-    public AcceptorApplication acceptorApplication() {
-        return new AcceptorApplication();
+  @Bean
+  public AcceptorApplication acceptorApplication() {
+    return new AcceptorApplication();
+  }
+
+  @Bean
+  public ThreadedSocketAcceptor acceptor(AcceptorApplication acceptorApplication) throws ConfigError {
+    SessionSettings setting = new SessionSettings("quickfix/acceptor.cfg");
+    FileStoreFactory fileStoreFactory = new FileStoreFactory(setting);
+    MessageFactory messageFactory = new DefaultMessageFactory();
+    FileLogFactory fileLogFactory = new FileLogFactory(setting);
+    ThreadedSocketAcceptor acceptor = new ThreadedSocketAcceptor(acceptorApplication, fileStoreFactory, setting,
+        fileLogFactory, messageFactory);
+    return acceptor;
+  }
+
+  public static class AcceptorLifecycle {
+    private final ThreadedSocketAcceptor acceptor;
+
+    public AcceptorLifecycle(ThreadedSocketAcceptor acceptor) {
+      this.acceptor = acceptor;
     }
 
-    @Bean
-    public ThreadedSocketAcceptor acceptor(AcceptorApplication acceptorApplication) throws ConfigError {
-        SessionSettings setting = new SessionSettings("quickfix/acceptor.cfg");
-        FileStoreFactory fileStoreFactory = new FileStoreFactory(setting);
-        MessageFactory messageFactory = new DefaultMessageFactory();
-        FileLogFactory fileLogFactory = new FileLogFactory(setting);
-        ThreadedSocketAcceptor acceptor = new ThreadedSocketAcceptor(acceptorApplication, fileStoreFactory, setting,
-                fileLogFactory, messageFactory);
-        return acceptor;
+    @PostConstruct
+    public void init() throws RuntimeError, ConfigError {
+      this.acceptor.start();
     }
 
-    public static class AcceptorLifecycle {
-        private final ThreadedSocketAcceptor acceptor;
-
-        public AcceptorLifecycle(ThreadedSocketAcceptor acceptor) {
-            this.acceptor = acceptor;
-        }
-
-        @PostConstruct
-        public void init() throws RuntimeError, ConfigError {
-            this.acceptor.start();
-        }
-
-        @PreDestroy
-        public void destroy() {
-            // this part is a kind of serious part...be careful
-            this.acceptor.stop();
-        }
+    @PreDestroy
+    public void destroy() {
+      // this part is a kind of serious part...be careful
+      this.acceptor.stop();
     }
+  }
 
-    @Bean
-    public AcceptorLifecycle acceptorLifecycle(ThreadedSocketAcceptor acceptor) {
-        return new AcceptorLifecycle(acceptor);
-    }
+  @Bean
+  public AcceptorLifecycle acceptorLifecycle(ThreadedSocketAcceptor acceptor) {
+    return new AcceptorLifecycle(acceptor);
+  }
 }

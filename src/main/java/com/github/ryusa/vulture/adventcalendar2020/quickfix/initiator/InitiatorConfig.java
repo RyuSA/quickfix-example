@@ -18,38 +18,38 @@ import quickfix.ThreadedSocketInitiator;
 @Configuration
 public class InitiatorConfig {
 
-    @Bean
-    public InitiatorApplication initiatorApplication() {
-        return new InitiatorApplication();
+  @Bean
+  public InitiatorApplication initiatorApplication() {
+    return new InitiatorApplication();
+  }
+
+  @Bean
+  public ThreadedSocketInitiator initiator(InitiatorApplication initiatorApplication) throws ConfigError {
+    SessionSettings settings = new SessionSettings("quickfix/initiator.cfg");
+    MessageStoreFactory storeFactory = new FileStoreFactory(settings);
+    LogFactory logFactory = new FileLogFactory(settings);
+    MessageFactory messageFactory = new DefaultMessageFactory();
+    ThreadedSocketInitiator socketInitiator = new ThreadedSocketInitiator(initiatorApplication, storeFactory, settings,
+        logFactory, messageFactory);
+    return socketInitiator;
+  }
+
+  public static class InitiatorLifecycle {
+    private final ThreadedSocketInitiator initiator;
+
+    public InitiatorLifecycle(ThreadedSocketInitiator initiator) {
+      this.initiator = initiator;
     }
 
-    @Bean
-    public ThreadedSocketInitiator initiator(InitiatorApplication initiatorApplication) throws ConfigError {
-        SessionSettings settings = new SessionSettings("quickfix/initiator.cfg");
-        MessageStoreFactory storeFactory = new FileStoreFactory(settings);
-        LogFactory logFactory = new FileLogFactory(settings);
-        MessageFactory messageFactory = new DefaultMessageFactory();
-        ThreadedSocketInitiator socketInitiator = new ThreadedSocketInitiator(initiatorApplication, storeFactory,
-                settings, logFactory, messageFactory);
-        return socketInitiator;
+    @PreDestroy
+    public void destroy() {
+      // you may want to send a LogOut message
+      this.initiator.stop();
     }
+  }
 
-    public static class InitiatorLifecycle {
-        private final ThreadedSocketInitiator initiator;
-
-        public InitiatorLifecycle(ThreadedSocketInitiator initiator) {
-            this.initiator = initiator;
-        }
-
-        @PreDestroy
-        public void destroy() {
-            // you may want to send a LogOut message
-            this.initiator.stop();
-        }
-    }
-
-    @Bean
-    public InitiatorLifecycle initiatorLifecycle(ThreadedSocketInitiator initiator) {
-        return new InitiatorLifecycle(initiator);
-    }
+  @Bean
+  public InitiatorLifecycle initiatorLifecycle(ThreadedSocketInitiator initiator) {
+    return new InitiatorLifecycle(initiator);
+  }
 }
