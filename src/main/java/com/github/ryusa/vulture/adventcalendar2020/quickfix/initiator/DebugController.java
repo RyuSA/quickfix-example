@@ -39,6 +39,11 @@ public class DebugController {
 
     private final ThreadedSocketInitiator initiator;
 
+    /**
+     * カウンターパーティに接続するAPIエンドポイントです
+     * 
+     * @return
+     */
     @PutMapping("/connect")
     public ResponseEntity<?> startConnection() {
 
@@ -72,6 +77,12 @@ public class DebugController {
         private char side;
     }
 
+    /**
+     * カウンターパーティへ指定された注文を発注します. 
+     * 
+     * @param request {@link NewOrderSingleRequest}
+     * @return
+     */
     @PostMapping("/order")
     public ResponseEntity<?> newOrderSingle(@RequestBody NewOrderSingleRequest request) {
 
@@ -80,21 +91,24 @@ public class DebugController {
                     .body("You need to request `PUT /api/connect` before requesting newOrderSingle");
         }
 
-        quickfix.fix44.NewOrderSingle newOrderSingle = new quickfix.fix44.NewOrderSingle(
-                new ClOrdID(UUID.randomUUID().toString()), new Side(request.side), new TransactTime(LocalDateTime.now()),
-                new OrdType(OrdType.MARKET));
-        newOrderSingle.set(new OrderQty(request.qty));
-        newOrderSingle.set(new Symbol(request.getSymbol()));
+    quickfix.fix44.NewOrderSingle newOrderSingle = new quickfix.fix44.NewOrderSingle(
+      new ClOrdID(UUID.randomUUID().toString()),
+      new Side(request.side),
+      new TransactTime(LocalDateTime.now()),
+      new OrdType(OrdType.MARKET)
+    );
+    newOrderSingle.set(new OrderQty(request.qty));
+    newOrderSingle.set(new Symbol(request.getSymbol()));
 
-        SessionID session = this.initiator.getSessions().get(0);
-        try {
-            Session.sendToTarget(newOrderSingle, session);
-            return ResponseEntity.ok().build();
-        } catch (SessionNotFound e) {
-            log.error("failed to send a newOrderSingle", e);
-            return ResponseEntity.badRequest()
-                    .body("You need to request `PUT /api/connect` before requesting newOrderSingle");
-        }
+    SessionID session = this.initiator.getSessions().get(0);
+    try {
+      Session.sendToTarget(newOrderSingle, session);
+      return ResponseEntity.ok().build();
+    } catch (SessionNotFound e) {
+      log.error("failed to send a newOrderSingle", e);
+      return ResponseEntity.badRequest()
+              .body("You need to request `PUT /api/connect` before requesting newOrderSingle");
+    }
 
     }
 }
