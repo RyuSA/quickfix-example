@@ -1,7 +1,5 @@
 package com.github.ryusa.vulture.adventcalendar2020.quickfix.initiator;
 
-import org.springframework.stereotype.Component;
-
 import lombok.extern.log4j.Log4j2;
 import quickfix.DoNotSend;
 import quickfix.FieldNotFound;
@@ -13,7 +11,6 @@ import quickfix.SessionID;
 import quickfix.UnsupportedMessageType;
 
 @Log4j2
-@Component
 public class InitiatorApplication extends quickfix.MessageCracker implements quickfix.Application {
 
     @Override
@@ -55,5 +52,18 @@ public class InitiatorApplication extends quickfix.MessageCracker implements qui
             throws FieldNotFound, IncorrectDataFormat, IncorrectTagValue, UnsupportedMessageType {
         log.info("---------- Client fromApp ----------");
         log.info("message {}", message.toString());
+        crack(message, sessionId);
+    }
+
+    /**
+     * カウンターパーティから約定情報を受信した場合の処理を記述します. この処理はMessageCracker#crackから呼び出されます
+     * 
+     * @param message
+     * @param sessionID
+     */
+    public void onMessage(quickfix.fix44.ExecutionReport message, SessionID sessionID) {
+        log.info("Awesome! Your order has been executed!");
+        log.info("Execution report; {}", message.toRawString());
+        // you may save the report into your database.
     }
 }
